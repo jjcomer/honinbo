@@ -1,5 +1,6 @@
 pom.xml
 *jar
+*pdf
 /lib/
 /classes/
 .lein-failures
