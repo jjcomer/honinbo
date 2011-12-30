@@ -1,6 +1,7 @@
-(ns honinbo.gamelogic)
+(ns honinbo.gamelogic
+  (:use [clojure.set :only [union]]))
 
-(defn- neighbours
+(defn neighbours
   "This private function will return the valid neighbour of a given board
    co-ordinate"
   [size yx]
@@ -14,7 +15,16 @@
   (case colour
     :white :black
     :black :white
-    :empty :empty))
+    :empty))
+
+(defn only-match-neighbours
+  "Only get the neighbours which match yx's colour"
+  [yx size board]
+  (let [colour (get-in board yx)]
+    (filter (fn [yx]
+              (let [c (get-in board yx)]
+                (= colour c)))
+            (neighbours size yx))))
 
 (defn gather-group
   [yx size board]
@@ -28,7 +38,7 @@
          (= :visited visit-colour) (recur group (pop to-visit) board)
          (= opp-colour visit-colour) (recur group (pop to-visit) board)
          :else
-         (recur (conj group visit)
+         (recur (conj group (into [] visit))
                 (apply conj (pop to-visit) (neighbours size visit))
                 (assoc-in board visit :visited)))))))
 
@@ -38,5 +48,6 @@
   [yx size board]
   (let [colour (get-opp-colour (get-in board yx))
         n (filter #(= colour (get-in board %)) (neighbours size yx))]
-    (filter (fn [locs] (every? #(= colour (get-in board %)) locs))
-            (map #(gather-group % size board) n))))
+    (apply union
+           (filter (fn [locs] (every? #(= colour (get-in board %)) locs))
+                   (map #(gather-group % size board) n)))))
